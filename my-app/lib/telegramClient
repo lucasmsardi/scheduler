@@ -1,0 +1,35 @@
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
+
+const apiId = 45; 
+const apiHash = "YOUR_API_HASH";
+
+const stringSession = new StringSession("YOUR_SAVED_SESSION_STRING"); // Can be an empty string on the first run
+
+(async () => {
+  console.log("Starting Telegram Client...");
+
+  const client = new TelegramClient(stringSession, apiId, apiHash, {
+    connectionRetries: 5,
+  });
+
+  await client.start({
+    phoneNumber: async () => '5551981977910', // Replace with your phone number including the country code
+    phoneCode: async () => {
+      console.log("Enter the code you received on Telegram.");
+      return "YOUR_VERIFICATION_CODE"; // Replace this with the code you received from Telegram
+    },
+    onError: (err) => console.log(err),
+  });
+
+  console.log("You are now connected!");
+
+  const sessionString = client.session.save();
+  console.log("Your session string:", sessionString);
+
+  const result = await client.sendMessage("me", { message: "Hello, this is a message to myself!" });
+  
+  console.log("Message sent:", result);
+
+  await client.disconnect();
+})();
