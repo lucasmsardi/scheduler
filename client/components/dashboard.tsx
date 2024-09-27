@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -76,6 +76,16 @@ export function DashboardComponent() {
 			errorLog: 'Connection timeout',
 		},
 	]);
+
+	useEffect(() => {
+		const fetchUsers = async () => {
+			const response = await fetch('/api/users');
+			const data = await response.json();
+			console.log(data);
+		};
+
+		fetchUsers();
+	}, []);
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isDialogOpen, setIsDialogOpen] = useState(false);

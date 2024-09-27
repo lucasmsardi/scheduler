@@ -8,4 +8,6 @@ const pool = new Pool({
   port: Number(process.env.PG_PORT) || 5432,
 });
 
-export const query = (text: string, params?: any[]) => pool.query(text, params);
+export const query = (text: string, params?: any[]) => {
+  return pool.query(text, params);
+};
