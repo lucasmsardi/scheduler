@@ -2,11 +2,13 @@
 	"name": "my-app",
 	"version": "0.1.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"telegram": "ts-node -P tsconfig.server.json ./lib/telegramClient.ts"
 	},
 	"dependencies": {
 		"@radix-ui/react-dialog": "^1.1.1",
