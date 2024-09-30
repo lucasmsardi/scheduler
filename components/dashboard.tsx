@@ -27,74 +27,13 @@ import {
 	Trash2Icon,
 	PlayIcon,
 } from 'lucide-react';
-
-type Task = {
-	id: string;
-	name: string;
-	apiEndpoint: string;
-	frequency: 'Daily' | 'Weekly' | 'Monthly';
-	nextExecution: string;
-	lastExecution: string;
-	responseTime: string;
-	status: 'Active' | 'Inactive' | 'Error';
-	errorLog: string;
-};
+import { Task } from '@/types/types';
 
 export function DashboardComponent() {
-	const [tasks, setTasks] = useState<Task[]>([
-		{
-			id: '1',
-			name: 'Daily User Sync',
-			apiEndpoint: 'https://api.example.com/sync-users',
-			frequency: 'Daily',
-			nextExecution: '2023-09-25 00:00:00',
-			lastExecution: '2023-09-24 00:00:00',
-			responseTime: '1.2s',
-			status: 'Active',
-			errorLog: '',
-		},
-		{
-			id: '2',
-			name: 'Weekly Report Generation',
-			apiEndpoint: 'https://api.example.com/generate-report',
-			frequency: 'Weekly',
-			nextExecution: '2023-09-25 01:00:00',
-			lastExecution: '2023-09-18 01:00:00',
-			responseTime: '3.5s',
-			status: 'Active',
-			errorLog: '',
-		},
-		{
-			id: '3',
-			name: 'Monthly Data Backup',
-			apiEndpoint: 'https://api.example.com/backup',
-			frequency: 'Monthly',
-			nextExecution: '2023-10-01 02:00:00',
-			lastExecution: '2023-09-01 02:00:00',
-			responseTime: '10.7s',
-			status: 'Error',
-			errorLog: 'Connection timeout',
-		},
-	]);
-
-	useEffect(() => {
-		const fetchUsers = async () => {
-			const response = await fetch('/api/users');
-			const data = await response.json();
-			console.log(data);
-		};
-
-		fetchUsers();
-	}, []);
-
+	const [tasks, setTasks] = useState<Task[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const [newTask, setNewTask] = useState<
-		Omit<
-			Task,
-			'id' | 'nextExecution' | 'lastExecution' | 'responseTime' | 'errorLog'
-		>
-	>({
+	const [newTask, setNewTask] = useState<Partial<Task>>({
 		name: '',
 		apiEndpoint: '',
 		frequency: 'Daily',
@@ -102,31 +41,41 @@ export function DashboardComponent() {
 	});
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+	useEffect(() => {
+		const fetchTasks = async () => {
+			const response = await fetch('/api/schedules');
+			const data = await response.json();
+			setTasks(data);
+		};
+
+		fetchTasks();
+	}, []);
+
 	const filteredTasks = tasks.filter(
 		(task) =>
 			task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			task.apiEndpoint.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const handleDelete = (id: string) => {
-		setTasks(tasks.filter((task) => task.id !== id));
-	};
-
-	const handleRun = (id: string) => {
-		console.log(`Running task ${id}`);
-	};
-
-	const handleAddNewTask = () => {
-		const newTaskWithDefaults: Task = {
+	const handleAddNewTask = async () => {
+		const newTaskWithDefaults: Partial<Task> = {
 			...newTask,
-			id: (tasks.length + 1).toString(),
 			nextExecution: 'N/A',
 			lastExecution: 'N/A',
 			responseTime: 'N/A',
 			errorLog: '',
 		};
 
-		setTasks([...tasks, newTaskWithDefaults]);
+		const response = await fetch('/api/schedules', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(newTaskWithDefaults),
+		});
+		const createdTask = await response.json();
+		setTasks([...tasks, createdTask]);
+
 		resetTaskForm();
 		setIsDialogOpen(false);
 	};
@@ -163,6 +112,33 @@ export function DashboardComponent() {
 			frequency: 'Daily',
 			status: 'Active',
 		});
+	};
+
+	// Handle task deletion
+	const handleDelete = async (taskId: string) => {
+		// Make an API request to delete the task
+		const response = await fetch(`/api/schedules/${taskId}`, {
+			method: 'DELETE',
+		});
+
+		if (response.ok) {
+			setTasks(tasks.filter((task) => task.id !== taskId));
+		}
+	};
+
+	// Handle task execution (Run Now)
+	const handleRun = async (taskId: string) => {
+		// Make an API request to run the task
+		const response = await fetch(`/api/schedules/${taskId}/run`, {
+			method: 'POST',
+		});
+
+		if (response.ok) {
+			const updatedTask = await response.json();
+			setTasks(
+				tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+			);
+		}
 	};
 
 	return (
