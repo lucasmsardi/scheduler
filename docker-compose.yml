@@ -1,39 +1,33 @@
 services:
-  postgres-db:
-    image: postgres:15                
-    container_name: postgres-db
+  postgres:
+    image: postgres:13
     environment:
-      POSTGRES_USER: ${PG_USER}       
-      POSTGRES_PASSWORD: ${PG_PASSWORD} 
-      POSTGRES_DB: ${PG_DATABASE}     
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
     ports:
-      - "5432:5432"                    
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-
-  app:
+      - pgdata:/var/lib/postgresql/data
+  
+  web:
     build:
-      context: .                      
-      dockerfile: Dockerfile           
-    container_name: nextjs-app
+      context: .
+      dockerfile: Dockerfile
     environment:
-      PG_USER: ${PG_USER}               
-      PG_PASSWORD: ${PG_PASSWORD}       
-      PG_HOST: ${PG_HOST}               
-      PG_DATABASE: ${PG_DATABASE}       
-      PG_PORT: ${PG_PORT}               
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      PGHOST: postgres
+      PGDATABASE: ${PGDATABASE}
+      PGPORT: ${PGPORT}
+      NEXT_PUBLIC_API_URL: http://web:3000/api
     ports:
-      - "3000:3000"                    
+      - "3000:3000"
     depends_on:
-      - postgres-db                  
-    networks:
-      - app-network
+      - postgres
+    volumes:
+      - .:/app
+    command: npm run dev
 
 volumes:
-  postgres_data:
-
-networks:
-  app-network:
-    driver: bridge
+  pgdata:

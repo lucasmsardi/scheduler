@@ -43,9 +43,19 @@ export function DashboardComponent() {
 
 	useEffect(() => {
 		const fetchTasks = async () => {
-			const response = await fetch('/api/schedules');
-			const data = await response.json();
-			setTasks(data);
+			try {
+				const response = await fetch('/api/schedules');
+				const data = await response.json();
+
+				if (Array.isArray(data)) {
+					setTasks(data);
+				} else {
+					setTasks([]);
+				}
+			} catch (error) {
+				console.error('Failed to fetch tasks:', error);
+				setTasks([]);
+			}
 		};
 
 		fetchTasks();
@@ -114,9 +124,7 @@ export function DashboardComponent() {
 		});
 	};
 
-	// Handle task deletion
 	const handleDelete = async (taskId: string) => {
-		// Make an API request to delete the task
 		const response = await fetch(`/api/schedules/${taskId}`, {
 			method: 'DELETE',
 		});
@@ -126,9 +134,7 @@ export function DashboardComponent() {
 		}
 	};
 
-	// Handle task execution (Run Now)
 	const handleRun = async (taskId: string) => {
-		// Make an API request to run the task
 		const response = await fetch(`/api/schedules/${taskId}/run`, {
 			method: 'POST',
 		});
