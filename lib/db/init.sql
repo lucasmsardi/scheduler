@@ -1,3 +1,7 @@
+-- Ensure you're connected to the correct database and schema
+SET search_path TO public;
+
+-- Create the schedules table if it doesn't exist
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -10,6 +14,7 @@ CREATE TABLE IF NOT EXISTS schedules (
   error_log TEXT
 );
 
+-- Insert initial records into the schedules table
 INSERT INTO schedules 
 (name, api_endpoint, frequency, next_execution, last_execution, response_time, status, error_log) 
 VALUES 

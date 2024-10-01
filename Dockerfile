@@ -11,11 +11,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the entire project (including the prisma directory)
+# Copy the entire project
 COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Expose the port Next.js will run on
 EXPOSE 3000

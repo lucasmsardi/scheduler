@@ -28,17 +28,37 @@ import {
 	PlayIcon,
 } from 'lucide-react';
 import { Task } from '@/types/types';
-import AddScheduleButton from './addschedulebutton';
+
+const formatDateForDisplay = (dateString: string | null) => {
+	if (!dateString || dateString === 'N/A') return 'N/A';
+
+	const date = new Date(dateString);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+
+	return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
 
 export function DashboardComponent() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const [newTask, setNewTask] = useState<Partial<Task>>({
+	const [nextExecutionDate, setNextExecutionDate] = useState(
+		new Date().toISOString().split('T')[0]
+	);
+	const [nextExecutionTime, setNextExecutionTime] = useState('12:00');
+	const [newTask, setNewTask] = useState<Omit<Task, 'id'>>({
 		name: '',
 		apiEndpoint: '',
 		frequency: 'Daily',
+		nextExecution: new Date().toISOString(),
+		lastExecution: 'N/A',
+		responseTime: 'N/A',
 		status: 'Active',
+		errorLog: '',
 	});
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -48,11 +68,19 @@ export function DashboardComponent() {
 				const response = await fetch('/api/schedules');
 				const data = await response.json();
 
-				if (Array.isArray(data)) {
-					setTasks(data);
-				} else {
-					setTasks([]);
-				}
+				const validTasks = data.map((task: Partial<Task>) => ({
+					id: task.id || '',
+					name: task.name || 'Unnamed Task',
+					apiEndpoint: task.apiEndpoint || 'No API Endpoint',
+					frequency: task.frequency || 'Daily',
+					nextExecution: task.nextExecution || 'N/A',
+					lastExecution: task.lastExecution || 'N/A',
+					responseTime: task.responseTime ?? 'N/A',
+					status: task.status || 'Inactive',
+					errorLog: task.errorLog || '',
+				})) as Task[];
+
+				setTasks(validTasks);
 			} catch (error) {
 				console.error('Failed to fetch tasks:', error);
 				setTasks([]);
@@ -64,17 +92,20 @@ export function DashboardComponent() {
 
 	const filteredTasks = tasks.filter(
 		(task) =>
-			task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			task.apiEndpoint.toLowerCase().includes(searchTerm.toLowerCase())
+			(task.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+			(task.apiEndpoint?.toLowerCase() || '').includes(searchTerm.toLowerCase())
 	);
 
 	const handleAddNewTask = async () => {
-		const newTaskWithDefaults: Partial<Task> = {
+		const combinedDateTime = new Date(
+			`${nextExecutionDate}T${nextExecutionTime}:00Z`
+		).toISOString();
+
+		const newTaskWithDefaults: Omit<Task, 'id'> = {
 			...newTask,
-			nextExecution: 'N/A',
+			nextExecution: combinedDateTime,
 			lastExecution: 'N/A',
 			responseTime: 'N/A',
-			errorLog: '',
 		};
 
 		const response = await fetch('/api/schedules', {
@@ -84,8 +115,11 @@ export function DashboardComponent() {
 			},
 			body: JSON.stringify(newTaskWithDefaults),
 		});
-		const createdTask = await response.json();
-		setTasks([...tasks, createdTask]);
+
+		if (response.ok) {
+			const createdTask = await response.json();
+			setTasks((prevTasks) => [...prevTasks, createdTask]);
+		}
 
 		resetTaskForm();
 		setIsDialogOpen(false);
@@ -93,20 +127,46 @@ export function DashboardComponent() {
 
 	const handleEditTask = (task: Task) => {
 		setEditingTask(task);
+
+		const nextExecutionISO = task.nextExecution?.replace(' ', 'T');
+
+		const date = nextExecutionISO ? new Date(nextExecutionISO) : null;
+
+		if (date && !isNaN(date.getTime())) {
+			setNextExecutionDate(date.toISOString().split('T')[0]);
+			setNextExecutionTime(date.toISOString().split('T')[1].substring(0, 5));
+		} else {
+			setNextExecutionDate('');
+			setNextExecutionTime('12:00');
+		}
+
 		setNewTask({
 			name: task.name,
 			apiEndpoint: task.apiEndpoint,
 			frequency: task.frequency,
+			nextExecution: task.nextExecution,
+			lastExecution: task.lastExecution,
+			responseTime: task.responseTime,
 			status: task.status,
+			errorLog: task.errorLog,
 		});
+
 		setIsDialogOpen(true);
 	};
 
 	const handleSaveTask = () => {
+		const combinedDateTime = new Date(
+			`${nextExecutionDate}T${nextExecutionTime}:00Z`
+		).toISOString();
+
 		if (editingTask) {
+			const updatedTask = {
+				...newTask,
+				nextExecution: combinedDateTime,
+			};
 			setTasks(
 				tasks.map((task) =>
-					task.id === editingTask.id ? { ...editingTask, ...newTask } : task
+					task.id === editingTask.id ? { ...editingTask, ...updatedTask } : task
 				)
 			);
 			setEditingTask(null);
@@ -121,8 +181,14 @@ export function DashboardComponent() {
 			name: '',
 			apiEndpoint: '',
 			frequency: 'Daily',
+			nextExecution: new Date().toISOString(),
+			lastExecution: 'N/A',
+			responseTime: 'N/A',
 			status: 'Active',
+			errorLog: '',
 		});
+		setNextExecutionDate(new Date().toISOString().split('T')[0]);
+		setNextExecutionTime('12:00');
 	};
 
 	const handleDelete = async (taskId: string) => {
@@ -163,10 +229,6 @@ export function DashboardComponent() {
 						<RefreshCwIcon className='h-4 w-4' />
 					</Button>
 				</div>
-				<div>
-					<h1>Schedule Manager</h1>
-					<AddScheduleButton />
-				</div>
 
 				<Dialog
 					open={isDialogOpen}
@@ -203,6 +265,18 @@ export function DashboardComponent() {
 								onChange={(e) =>
 									setNewTask({ ...newTask, apiEndpoint: e.target.value })
 								}
+							/>
+							<input
+								type='date'
+								value={nextExecutionDate}
+								onChange={(e) => setNextExecutionDate(e.target.value)}
+								className='p-2 border rounded'
+							/>
+							<input
+								type='time'
+								value={nextExecutionTime}
+								onChange={(e) => setNextExecutionTime(e.target.value)}
+								className='p-2 border rounded'
 							/>
 							<select
 								value={newTask.frequency}
@@ -247,8 +321,12 @@ export function DashboardComponent() {
 								<TableCell className='font-medium'>{task.name}</TableCell>
 								<TableCell>{task.apiEndpoint}</TableCell>
 								<TableCell>{task.frequency}</TableCell>
-								<TableCell>{task.nextExecution}</TableCell>
-								<TableCell>{task.lastExecution}</TableCell>
+								<TableCell>
+									{formatDateForDisplay(task.nextExecution)}
+								</TableCell>
+								<TableCell>
+									{formatDateForDisplay(task.lastExecution)}
+								</TableCell>
 								<TableCell>{task.responseTime}</TableCell>
 								<TableCell>
 									<Badge
