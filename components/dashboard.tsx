@@ -28,6 +28,7 @@ import {
 	PlayIcon,
 } from 'lucide-react';
 import { Task } from '@/types/types';
+import AddScheduleButton from './addschedulebutton';
 
 export function DashboardComponent() {
 	const [tasks, setTasks] = useState<Task[]>([]);
@@ -161,6 +162,10 @@ export function DashboardComponent() {
 					<Button variant='outline' size='icon'>
 						<RefreshCwIcon className='h-4 w-4' />
 					</Button>
+				</div>
+				<div>
+					<h1>Schedule Manager</h1>
+					<AddScheduleButton />
 				</div>
 
 				<Dialog

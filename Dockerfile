@@ -1,15 +1,24 @@
-FROM node:18.17.1
+# Use an official Node.js runtime as a parent image
+FROM node:18
 
+# Set the working directory inside the container
 WORKDIR /app
 
+# Copy only the package.json and package-lock.json (or yarn.lock) first
+# to leverage Docker caching
 COPY package*.json ./
 
+# Install dependencies
 RUN npm install
 
+# Copy the entire project (including the prisma directory)
 COPY . .
 
-RUN npm run build
+# Generate Prisma client
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
+# Expose the port Next.js will run on
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Default command to run your Next.js app
+CMD ["npm", "run", "start"]

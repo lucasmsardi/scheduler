@@ -1,7 +1,7 @@
 import { query } from '@/lib/db/db';
 
 export async function getSchedules() {
-  const sql = `SELECT * FROM schedules`;
+  const sql = `SELECT * FROM "schedules"`;
   const result = await query(sql);
   return result.rows;
 }

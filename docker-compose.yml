@@ -1,5 +1,5 @@
 services:
-  postgres:
+  postgres_db:
     image: postgres:13
     environment:
       POSTGRES_USER: ${PGUSER}
@@ -9,6 +9,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    container_name: postgres_db
   
   web:
     build:
@@ -17,17 +19,19 @@ services:
     environment:
       PGUSER: ${PGUSER}
       PGPASSWORD: ${PGPASSWORD}
-      PGHOST: postgres
+      PGHOST: postgres_db
       PGDATABASE: ${PGDATABASE}
       PGPORT: ${PGPORT}
       NEXT_PUBLIC_API_URL: http://web:3000/api
+      PRISMA_SCHEMA_PATH: ./prisma/schema.prisma
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
+      - postgres_db
     volumes:
       - .:/app
     command: npm run dev
+    container_name: web
 
 volumes:
   pgdata:

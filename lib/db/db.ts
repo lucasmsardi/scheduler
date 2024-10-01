@@ -8,6 +8,12 @@ const pool = new Pool({
   port: Number(process.env.PGPORT) || 5432,
 });
 
-export const query = (text: string, params?: any[]) => {
-  return pool.query(text, params);
+export const query = async (text: string, params?: any[]) => {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(text, params);
+    return res;
+  } finally {
+    client.release();
+  }
 };

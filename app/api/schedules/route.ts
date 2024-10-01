@@ -1,38 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createSchedule, getSchedules } from '@/lib/db/schedules';
+import { NextResponse } from 'next/server';
+import { getSchedules, createSchedule } from '@/lib/db/schedules';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const schedules = await getSchedules();
     return NextResponse.json(schedules);
   } catch (error) {
-    console.error('Error fetching schedules:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch schedules' }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const data = await request.json();
-
-    if (!data.name || !data.api_endpoint || !data.next_execution) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
+    const { scheduleName, apiEndpoint, frequency, nextExecution, lastExecution, responseTime, status, errorLog } = await req.json();
     const newSchedule = await createSchedule(
-      data.name,                            
-      data.api_endpoint,
-      data.frequency,
-      data.next_execution,                 
-      data.last_execution || null,         
-      data.response_time || 'N/A',         
-      data.status || 'Active',            
-      data.error_log || ''                  
+      scheduleName,
+      apiEndpoint,
+      frequency,
+      nextExecution,
+      lastExecution,
+      responseTime,
+      status,
+      errorLog
     );
-
-    return NextResponse.json(newSchedule, { status: 201 }); 
+    return NextResponse.json(newSchedule);
   } catch (error) {
-    console.error('Error creating schedule:', error); 
     return NextResponse.json({ error: 'Failed to create schedule' }, { status: 500 });
   }
 }
