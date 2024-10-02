@@ -139,9 +139,14 @@ export function DashboardComponent() {
 		const nextExecutionISO = task.nextExecution?.replace(' ', 'T');
 		const date = nextExecutionISO ? new Date(nextExecutionISO) : null;
 
-		if (date) {
-			setNextExecutionDate(nextExecutionISO.split('T')[0]);
-			setNextExecutionTime(nextExecutionISO.split('T')[1].substring(0, 5));
+		if (date && !isNaN(date.getTime())) {
+			const datePart = nextExecutionISO.split('T')[0];
+			const timePart = nextExecutionISO.split('T')[1]
+				? nextExecutionISO.split('T')[1].substring(0, 5)
+				: '12:00';
+
+			setNextExecutionDate(datePart);
+			setNextExecutionTime(timePart);
 		} else {
 			setNextExecutionDate('');
 			setNextExecutionTime('12:00');
