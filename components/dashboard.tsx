@@ -27,7 +27,7 @@ import {
 	Trash2Icon,
 	PlayIcon,
 } from 'lucide-react';
-import { Task } from '@/types';
+import { Task } from '@/types/types';
 
 const formatDateForDisplay = (dateString: string | null) => {
 	if (!dateString || dateString === 'N/A') return 'N/A';
@@ -208,6 +208,8 @@ export function DashboardComponent() {
 
 		if (response.ok) {
 			setTasks(tasks.filter((task) => task.id !== taskId));
+		} else {
+			console.error('Failed to delete task:', await response.json());
 		}
 	};
 

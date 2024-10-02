@@ -30,9 +30,22 @@ export async function createSchedule(
     lastExecution || null, 
     responseTime,         
     status,               
-    errorLog            
+    errorLog              
   ];
 
   const result = await query(sql, values);
+  return result.rows[0];
+}
+
+export async function deleteSchedule(id: string) {
+  const sql = `DELETE FROM "schedules" WHERE id = $1 RETURNING *;`;
+
+  const values = [id];
+  const result = await query(sql, values);
+
+  if (result.rowCount === 0) {
+    throw new Error('Schedule not found');
+  }
+
   return result.rows[0];
 }

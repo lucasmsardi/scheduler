@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSchedules, createSchedule } from '@/lib/db/schedules';
-import { Task } from '@/types'; 
+import { getSchedules, createSchedule, deleteSchedule } from '@/lib/db/schedules';
+import { Task } from '@/types/types';
 
 export async function GET() {
   try {
@@ -42,3 +42,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create schedule' }, { status: 500 });
   }
 }
+
+
