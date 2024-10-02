@@ -12,7 +12,7 @@ export async function createSchedule(
   frequency: string,
   nextExecution: string | null,
   lastExecution: string | null,
-  responseTime: string | null,
+  responseTime: number | null,
   status: string | null,
   errorLog: string | null
 ) {

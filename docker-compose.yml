@@ -6,11 +6,13 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_DB: ${PGDATABASE}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - ./lib/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_data:/var/lib/postgresql/data
     container_name: postgres_db
-  
+    networks:
+      - backend
+
   web:
     build:
       context: .
@@ -18,15 +20,24 @@ services:
     environment:
       PGUSER: ${PGUSER}
       PGPASSWORD: ${PGPASSWORD}
-      PGHOST: postgres_db
+      PGHOST: postgres_db       
       PGDATABASE: ${PGDATABASE}
-      PGPORT: ${PGPORT}
+      PGPORT: ${PGPORT}         
       NEXT_PUBLIC_API_URL: http://web:3000/api
     ports:
       - "3000:3000"
     depends_on:
-      - postgres_db
+      - postgres_db               
     volumes:
-      - .:/app
-    command: npm run dev
+      - .:/app                   
+    command: npm run dev          
     container_name: web
+    networks:
+      - backend                   
+
+volumes:
+  pg_data:
+
+networks:
+  backend:                      
+    driver: bridge

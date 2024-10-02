@@ -56,7 +56,7 @@ export function DashboardComponent() {
 		frequency: 'Daily',
 		nextExecution: new Date().toISOString(),
 		lastExecution: 'N/A',
-		responseTime: 'N/A',
+		responseTime: null,
 		status: 'Active',
 		errorLog: '',
 	});
@@ -68,19 +68,24 @@ export function DashboardComponent() {
 				const response = await fetch('/api/schedules');
 				const data = await response.json();
 
-				const validTasks = data.map((task: Partial<Task>) => ({
-					id: task.id || '',
-					name: task.name || 'Unnamed Task',
-					apiEndpoint: task.apiEndpoint || 'No API Endpoint',
-					frequency: task.frequency || 'Daily',
-					nextExecution: task.nextExecution || 'N/A',
-					lastExecution: task.lastExecution || 'N/A',
-					responseTime: task.responseTime ?? 'N/A',
-					status: task.status || 'Inactive',
-					errorLog: task.errorLog || '',
-				})) as Task[];
+				if (Array.isArray(data)) {
+					const validTasks = data.map((task: Partial<Task>) => ({
+						id: task.id || '',
+						name: task.name || 'Unnamed Task',
+						apiEndpoint: task.apiEndpoint || 'No API Endpoint',
+						frequency: task.frequency || 'Daily',
+						nextExecution: task.nextExecution || 'N/A',
+						lastExecution: task.lastExecution || 'N/A',
+						responseTime: task.responseTime ?? 'N/A',
+						status: task.status || 'Inactive',
+						errorLog: task.errorLog || '',
+					})) as Task[];
 
-				setTasks(validTasks);
+					setTasks(validTasks);
+				} else {
+					console.error('Unexpected data format:', data);
+					setTasks([]);
+				}
 			} catch (error) {
 				console.error('Failed to fetch tasks:', error);
 				setTasks([]);
@@ -105,7 +110,7 @@ export function DashboardComponent() {
 			...newTask,
 			nextExecution: combinedDateTime,
 			lastExecution: 'N/A',
-			responseTime: 'N/A',
+			responseTime: null,
 		};
 
 		const response = await fetch('/api/schedules', {
@@ -183,7 +188,7 @@ export function DashboardComponent() {
 			frequency: 'Daily',
 			nextExecution: new Date().toISOString(),
 			lastExecution: 'N/A',
-			responseTime: 'N/A',
+			responseTime: null,
 			status: 'Active',
 			errorLog: '',
 		});

@@ -5,7 +5,7 @@ export type Task = {
 	frequency: 'Daily' | 'Weekly' | 'Monthly';
 	nextExecution: string; 
 	lastExecution: string; 
-	responseTime: number | 'N/A';
+	responseTime: number | null;
 	status: 'Active' | 'Inactive' | 'Error';
 	errorLog: string;
 };
