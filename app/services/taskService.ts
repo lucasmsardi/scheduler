@@ -1,4 +1,4 @@
-import { Task } from "@/types/types"; 
+import { Task } from "@/types"; 
 
 export const fetchTasks = async (): Promise<Task[]> => {
 	const response = await fetch('/api/schedules');

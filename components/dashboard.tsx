@@ -27,7 +27,7 @@ import {
 	Trash2Icon,
 	PlayIcon,
 } from 'lucide-react';
-import { Task } from '@/types/types';
+import { Task } from '@/types';
 
 const formatDateForDisplay = (dateString: string | null) => {
 	if (!dateString || dateString === 'N/A') return 'N/A';
@@ -102,14 +102,17 @@ export function DashboardComponent() {
 	);
 
 	const handleAddNewTask = async () => {
-		const combinedDateTime = new Date(
-			`${nextExecutionDate}T${nextExecutionTime}:00Z`
-		).toISOString();
+		const combinedDateTime =
+			nextExecutionDate && nextExecutionTime
+				? new Date(
+						`${nextExecutionDate}T${nextExecutionTime}:00Z`
+				  ).toISOString()
+				: null;
 
 		const newTaskWithDefaults: Omit<Task, 'id'> = {
 			...newTask,
 			nextExecution: combinedDateTime,
-			lastExecution: 'N/A',
+			lastExecution: null,
 			responseTime: null,
 		};
 
@@ -134,12 +137,11 @@ export function DashboardComponent() {
 		setEditingTask(task);
 
 		const nextExecutionISO = task.nextExecution?.replace(' ', 'T');
-
 		const date = nextExecutionISO ? new Date(nextExecutionISO) : null;
 
-		if (date && !isNaN(date.getTime())) {
-			setNextExecutionDate(date.toISOString().split('T')[0]);
-			setNextExecutionTime(date.toISOString().split('T')[1].substring(0, 5));
+		if (date) {
+			setNextExecutionDate(nextExecutionISO.split('T')[0]);
+			setNextExecutionTime(nextExecutionISO.split('T')[1].substring(0, 5));
 		} else {
 			setNextExecutionDate('');
 			setNextExecutionTime('12:00');
@@ -160,9 +162,12 @@ export function DashboardComponent() {
 	};
 
 	const handleSaveTask = () => {
-		const combinedDateTime = new Date(
-			`${nextExecutionDate}T${nextExecutionTime}:00Z`
-		).toISOString();
+		const combinedDateTime =
+			nextExecutionDate && nextExecutionTime
+				? new Date(
+						`${nextExecutionDate}T${nextExecutionTime}:00Z`
+				  ).toISOString()
+				: null;
 
 		if (editingTask) {
 			const updatedTask = {

@@ -1,7 +1,5 @@
--- Ensure you're connected to the correct database and schema
 SET search_path TO public;
 
--- Create the schedules table if it doesn't exist
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
